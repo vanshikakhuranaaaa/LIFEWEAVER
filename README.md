@@ -1,6 +1,9 @@
 # ✦ LifeWeaver
 
 ### Your Personal Life Operating System
+## 🌐 Live Demo
+
+👉 **[Launch LifeWeaver](https://lifeweaver-six.vercel.app/)**
 
 > **LifeWeaver** is a personal life management web application designed to bring important documents, deadlines, reminders, and records together in one organized space.
 
