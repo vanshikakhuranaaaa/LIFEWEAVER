@@ -1,47 +1,147 @@
-# LifeWeaver
+# ✦ LifeWeaver
 
-## Personal Life Operating System
+### Your Personal Life Operating System
 
-LifeWeaver is a personal life management web application designed to help users organize important documents, track key dates, manage reminders, and quickly search through their personal records.
+> **LifeWeaver** is a personal life management web application designed to bring important documents, deadlines, reminders, and records together in one organized space.
 
-## Features
+---
 
-- User registration and login
-- Personal dashboard
-- Document management
-- Document categories
-- Important date tracking
-- Expiry and due-date monitoring
-- Reminder management
-- Search and timeline functionality
-- Document status tracking
-- Responsive user interface
-- Local browser data storage
-- Simulated AI/OCR document analysis
+## 🌐 Overview
 
-## Main Modules
+LifeWeaver helps users keep track of the important administrative details of everyday life.
 
-### Dashboard
-Provides an overview of tracked documents and important dates, including documents that are expiring soon, due this month, completed, and total tracked items.
+Instead of keeping documents, expiry dates, warranties, subscriptions, and reminders scattered across different places, LifeWeaver provides a centralized dashboard to organize and monitor them.
 
-### Document Vault
-Allows users to add and manage important documents such as insurance documents, warranties, bills, certificates, subscriptions, and other personal records.
+### ✨ Why LifeWeaver?
 
-### Reminders
-Displays tracked dates and allows users to mark reminders as completed or undo completion.
+Important documents often come with important dates.
 
-### Search & Timeline
-Allows users to search through their tracked records and filter them by category.
+Insurance expires.  
+Warranties end.  
+Subscriptions renew.  
+Certificates need to be preserved.  
+Bills and records need to be found quickly.
 
-## Technology Used
+**LifeWeaver turns these scattered responsibilities into one simple life-management system.**
+
+---
+
+## 🚀 Features
+
+| Feature | Description |
+|--------|-------------|
+| 🏠 **Dashboard** | Get a quick overview of important documents and upcoming dates |
+| 📁 **Document Vault** | Organize important personal documents in one place |
+| ⏰ **Reminders** | Track deadlines and mark completed reminders |
+| 🔎 **Search & Timeline** | Quickly search and filter your records |
+| 🏷️ **Categories** | Organize records by type such as Vehicle, Finance, Education and more |
+| 📊 **Status Tracking** | Identify items that are expiring soon, due this month, or completed |
+| 👤 **User Accounts** | Register and log in to a personal LifeWeaver workspace |
+| 🤖 **AI/OCR Prototype** | Simulated document analysis and key-field extraction |
+| 📱 **Responsive UI** | Designed to work across different screen sizes |
+
+---
+
+## 🖥️ Main Modules
+
+### 🏠 Dashboard
+
+A centralized overview of your life records.
+
+It provides quick statistics for:
+
+- Expiring soon
+- Due this month
+- Completed
+- Total tracked
+- Upcoming events
+
+---
+
+### 📁 Document Vault
+
+A dedicated space for managing important documents.
+
+Examples include:
+
+- Vehicle insurance
+- Warranties
+- Bills
+- Receipts
+- Certificates
+- Subscriptions
+- Household records
+- Educational documents
+
+---
+
+### ⏰ Reminders
+
+LifeWeaver tracks important dates and presents them in an organized reminder view.
+
+Users can:
+
+- View upcoming dates
+- Identify overdue records
+- Mark reminders as completed
+- Undo completed reminders
+
+---
+
+### 🔎 Search & Timeline
+
+Find records quickly using search and category filters.
+
+Available categories include:
+
+- All
+- Documents
+- Vehicle
+- Finance
+- Household
+- Education
+- Purchases
+
+---
+
+## 🎨 Design
+
+LifeWeaver uses a focused dark interface with warm accent tones to create a modern **personal productivity / digital-organizer aesthetic**.
+
+The interface is built around:
+
+- Clean information hierarchy
+- Dashboard-style cards
+- Minimal navigation
+- Clear status indicators
+- Responsive layouts
+
+---
+
+## 🛠️ Technology Stack
+
+**Frontend**
 
 - HTML5
 - CSS3
 - JavaScript
-- LocalStorage
+
+**Storage**
+
+- Browser LocalStorage
+
+**Typography**
+
 - Google Fonts
 
-## Project Structure
+**Deployment**
+
+- GitHub
+- Vercel
+
+---
+
+## 📂 Project Structure
 
 ```text
 LifeWeaver/
