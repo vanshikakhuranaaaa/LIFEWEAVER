@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeWeaver — Personal Life Operating System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2A3B; --ink-soft:#5A6B7C; --paper:#EEF0EA; --paper-card:#F8F8F3;
+    --navy:#16233A; --line:rgba(27,42,59,0.14);
+    --amber:#D89A34; --rust:#B5533E; --green:#4C7A5E;
+    --amber-tint:#F7E9CE; --rust-tint:#F3DCD5; --green-tint:#DCE7DE;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-0.01em;margin:0;}
+  input,select,textarea,button{font-family:inherit;}
+  ::selection{background:var(--amber-tint);}
+
+  /* ---------------- AUTH SCREEN ---------------- */
+  #auth-screen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  .auth-card{
+    width:100%;max-width:400px;background:var(--paper-card);border:1px solid var(--line);
+    border-radius:14px;padding:36px 32px;box-shadow:0 18px 40px -24px rgba(27,42,59,0.35);
+  }
+  .auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:26px;}
+  .auth-logo .mark{width:28px;height:28px;border-radius:7px;background:var(--navy);color:var(--paper);
+    display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;transform:rotate(-6deg);}
+  .auth-logo span{font-family:'Fraunces',serif;font-weight:600;font-size:19px;}
+  .auth-tabs{display:flex;gap:4px;background:var(--paper);border-radius:8px;padding:4px;margin-bottom:22px;}
+  .auth-tab{flex:1;text-align:center;padding:8px;font-size:13.5px;font-weight:600;border-radius:6px;cursor:pointer;color:var(--ink-soft);}
+  .auth-tab.active{background:var(--navy);color:var(--paper);}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;font-family:'IBM Plex Mono',monospace;}
+  .field input,.field select{
+    width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;
+    background:#fff;font-size:14px;color:var(--ink);
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--navy);outline-offset:1px;}
+  .btn{
+    font-size:14.5px;font-weight:600;padding:12px 20px;border-radius:8px;border:1px solid var(--navy);
+    cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;justify-content:center;
+    transition:transform .08s;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn.primary{background:var(--navy);color:var(--paper);width:100%;}
+  .btn.ghost{background:transparent;color:var(--navy);}
+  .btn.small{padding:8px 14px;font-size:13px;}
+  .auth-hint{font-size:12px;color:var(--ink-soft);margin-top:16px;text-align:center;line-height:1.6;}
+  .auth-error{font-size:12.5px;color:var(--rust);margin-bottom:12px;display:none;}
+
+  /* ---------------- APP SHELL ---------------- */
+  #app{display:none;min-height:100vh;}
+  .shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh;}
+  .sidebar{
+    background:var(--navy);color:var(--paper);padding:24px 18px;display:flex;flex-direction:column;
+    position:sticky;top:0;height:100vh;
+  }
+  .side-logo{display:flex;align-items:center;gap:10px;padding:0 6px;margin-bottom:30px;}
+  .side-logo .mark{width:26px;height:26px;border-radius:6px;background:var(--amber);color:#3A2C08;
+    display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;transform:rotate(-6deg);}
+  .side-logo span{font-family:'Fraunces',serif;font-weight:600;font-size:17px;}
+  .nav-item{
+    display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:8px;
+    color:#B9C4D2;font-size:14px;cursor:pointer;margin-bottom:2px;
+  }
+  .nav-item .ic{width:18px;text-align:center;}
+  .nav-item:hover{background:rgba(255,255,255,0.05);color:var(--paper);}
+  .nav-item.active{background:rgba(255,255,255,0.09);color:var(--paper);font-weight:600;}
+  .side-foot{margin-top:auto;padding:12px 6px;border-top:1px solid rgba(255,255,255,0.1);}
+  .side-user{font-size:13px;color:#B9C4D2;margin-bottom:10px;}
+  .side-user b{color:var(--paper);display:block;font-size:13.5px;}
+  .logout-link{font-size:12.5px;color:#8FA0B5;cursor:pointer;text-decoration:underline;}
+
+  .main{padding:32px 40px;overflow-x:hidden;}
+  .view{display:none;}
+  .view.active{display:block;animation:fadeIn .25s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .page-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;gap:16px;flex-wrap:wrap;}
+  .page-head h2{font-size:28px;}
+  .page-head p{font-size:14px;color:var(--ink-soft);margin-top:6px;max-width:48ch;}
+
+  /* stat cards */
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:30px;}
+  .stat-card{background:var(--paper-card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;}
+  .stat-card .lab{font-size:12px;color:var(--ink-soft);display:flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;}
+  .stat-card .lab .dot{width:8px;height:8px;border-radius:50%;}
+  .stat-card .num{font-family:'Fraunces',serif;font-size:32px;margin-top:8px;}
+
+  .panel{background:var(--paper-card);border:1px solid var(--line);border-radius:12px;padding:22px;margin-bottom:22px;}
+  .panel h3{font-size:16px;margin-bottom:14px;}
+
+  /* upcoming list */
+  .event-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--line);}
+  .event-row:first-child{border-top:none;}
+  .event-row .cat-ic{width:34px;height:34px;border-radius:8px;background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:16px;flex:none;}
+  .event-row .info{flex:1;min-width:0;}
+  .event-row .info .n{font-size:14px;font-weight:600;}
+  .event-row .info .m{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+  .event-row .badge{font-size:11.5px;font-family:'IBM Plex Mono',monospace;padding:4px 10px;border-radius:100px;flex:none;}
+  .badge.expiring{background:var(--rust-tint);color:#7A2E1E;}
+  .badge.due{background:var(--amber-tint);color:#7A5A15;}
+  .badge.ok{background:var(--green-tint);color:#2E4B3A;}
+  .badge.done{background:#E4E4DE;color:#6b6b63;}
+  .empty-state{padding:36px 10px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
+  .empty-state .em{font-size:26px;display:block;margin-bottom:10px;}
+
+  /* vault upload */
+  .upload-zone{
+    border:1.5px dashed var(--line);border-radius:12px;padding:30px;text-align:center;
+    background:var(--paper-card);cursor:pointer;transition:border-color .15s,background .15s;
+  }
+  .upload-zone:hover, .upload-zone.drag{border-color:var(--navy);background:#fff;}
+  .upload-zone .em{font-size:26px;}
+  .upload-zone .t{font-size:14.5px;font-weight:600;margin-top:10px;}
+  .upload-zone .s{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
+
+  .analyzing{display:none;align-items:center;gap:12px;padding:16px 18px;background:var(--amber-tint);border-radius:10px;margin-top:16px;font-size:13.5px;color:#7A5A15;}
+  .spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(122,90,21,0.3);border-top-color:#7A5A15;animation:spin .7s linear infinite;flex:none;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .extract-form{display:none;margin-top:18px;padding-top:18px;border-top:1px solid var(--line);}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+  .doc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .doc-card{background:var(--paper-card);border:1px solid var(--line);border-radius:12px;padding:18px;position:relative;}
+  .doc-card .top{display:flex;justify-content:space-between;align-items:flex-start;}
+  .doc-card .cat{font-size:20px;}
+  .doc-card .del{font-size:12px;color:var(--ink-soft);cursor:pointer;}
+  .doc-card .del:hover{color:var(--rust);}
+  .doc-card h4{font-size:15px;margin-top:10px;}
+  .doc-card .meta{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
+  .doc-card .badge{margin-top:12px;display:inline-block;}
+  .doc-card .complete-toggle{
+    margin-top:12px;font-size:12px;color:var(--navy);cursor:pointer;text-decoration:underline;display:inline-block;margin-left:10px;
+  }
+
+  .search-input{width:100%;max-width:480px;padding:13px 16px;border-radius:10px;border:1px solid var(--line);font-size:14.5px;background:#fff;}
+  .search-input:focus{outline:2px solid var(--navy);outline-offset:1px;}
+  .search-chips{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap;}
+  .chip-btn{
+    font-size:12.5px;padding:6px 13px;border-radius:100px;border:1px solid var(--line);background:var(--paper-card);
+    cursor:pointer;color:var(--ink-soft);
+  }
+  .chip-btn.active{background:var(--navy);color:var(--paper);border-color:var(--navy);}
+
+  select.field-select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:14px;}
+
+  .toast{
+    position:fixed;bottom:24px;right:24px;background:var(--navy);color:var(--paper);
+    padding:13px 20px;border-radius:9px;font-size:13.5px;box-shadow:0 12px 30px -10px rgba(0,0,0,0.4);
+    display:none;align-items:center;gap:10px;z-index:100;
+  }
+
+  @media(max-width:860px){
+    .shell{grid-template-columns:1fr;}
+    .sidebar{position:relative;height:auto;flex-direction:row;align-items:center;padding:14px 16px;overflow-x:auto;}
+    .side-logo{margin-bottom:0;margin-right:14px;}
+    .nav-item{white-space:nowrap;margin-bottom:0;}
+    .side-foot{display:none;}
+    .main{padding:22px 18px;}
+    .stats-row{grid-template-columns:1fr 1fr;}
+    .doc-grid{grid-template-columns:1fr 1fr;}
+    .form-grid{grid-template-columns:1fr;}
+  }
+  @media(max-width:520px){
+    .stats-row{grid-template-columns:1fr 1fr;}
+    .doc-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= AUTH SCREEN ================= -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo"><span class="mark">LW</span><span>LifeWeaver</span></div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" data-mode="login" onclick="setAuthMode('login')">Log in</div>
+      <div class="auth-tab" data-mode="register" onclick="setAuthMode('register')">Register</div>
+    </div>
+    <div class="auth-error" id="auth-error">That doesn't look right — check your details.</div>
+    <div id="reg-name-field" class="field" style="display:none;">
+      <label>Full name</label>
+      <input id="reg-name" type="text" placeholder="e.g. Aditi Sharma">
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input id="auth-email" type="email" placeholder="you@example.com">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input id="auth-password" type="password" placeholder="••••••••">
+    </div>
+    <button class="btn primary" id="auth-submit" onclick="submitAuth()">Log in</button>
+    <div class="auth-hint">Runs entirely in this browser tab — your account and documents are saved locally so the demo works offline.</div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="side-logo"><span class="mark">LW</span><span>LifeWeaver</span></div>
+      <div class="nav-item active" data-view="dashboard" onclick="showView('dashboard')"><span class="ic">▦</span>Dashboard</div>
+      <div class="nav-item" data-view="vault" onclick="showView('vault')"><span class="ic">📄</span>Document Vault</div>
+      <div class="nav-item" data-view="reminders" onclick="showView('reminders')"><span class="ic">⏰</span>Reminders</div>
+      <div class="nav-item" data-view="search" onclick="showView('search')"><span class="ic">🔍</span>Search</div>
+      <div class="side-foot">
+        <div class="side-user"><b id="side-user-name">—</b><span id="side-user-email"></span></div>
+        <span class="logout-link" onclick="logout()">Log out</span>
+      </div>
+    </aside>
+
+    <main class="main">
+
+      <!-- DASHBOARD -->
+      <section class="view active" id="view-dashboard">
+        <div class="page-head">
+          <div>
+            <h2 id="dash-greeting">Welcome back</h2>
+            <p>Everything LifeWeaver is currently tracking for you, in one place.</p>
+          </div>
+          <button class="btn primary small" onclick="showView('vault')">+ Add document</button>
+        </div>
+        <div class="stats-row">
+          <div class="stat-card"><div class="lab"><span class="dot" style="background:#B5533E;"></span>Expiring soon</div><div class="num" id="stat-expiring">0</div></div>
+          <div class="stat-card"><div class="lab"><span class="dot" style="background:#D89A34;"></span>Due this month</div><div class="num" id="stat-due">0</div></div>
+          <div class="stat-card"><div class="lab"><span class="dot" style="background:#4C7A5E;"></span>Completed</div><div class="num" id="stat-completed">0</div></div>
+          <div class="stat-card"><div class="lab"><span class="dot" style="background:#1B2A3B;"></span>Total tracked</div><div class="num" id="stat-total">0</div></div>
+        </div>
+        <div class="panel">
+          <h3>Upcoming events</h3>
+          <div id="dash-upcoming"></div>
+        </div>
+      </section>
+
+      <!-- VAULT -->
+      <section class="view" id="view-vault">
+        <div class="page-head">
+          <div>
+            <h2>Document Vault</h2>
+            <p>Upload a document — LifeWeaver's AI will read it and pull out the fields that matter.</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+            <div class="em">📤</div>
+            <div class="t">Click to upload a document</div>
+            <div class="s">PDF, JPG or PNG — insurance, warranty, bill, certificate, receipt…</div>
+            <input type="file" id="file-input" style="display:none" onchange="handleFile(event)">
+          </div>
+          <div class="analyzing" id="analyzing"><div class="spinner"></div><span id="analyzing-text">Reading document with AI/OCR…</span></div>
+
+          <form class="extract-form" id="extract-form" onsubmit="return saveDocument(event)">
+            <h3 style="margin-bottom:14px;">Extracted details — check and confirm</h3>
+            <div class="form-grid">
+              <div class="field"><label>Document name</label><input id="f-name" type="text" required></div>
+              <div class="field"><label>Category</label>
+                <select id="f-category" class="field-select">
+                  <option>Documents</option><option>Vehicle</option><option>Finance</option>
+                  <option>Household</option><option>Education</option><option>Purchases</option>
+                </select>
+              </div>
+              <div class="field"><label>Key date (expiry / renewal / due)</label><input id="f-date" type="date" required></div>
+              <div class="field"><label>Reference / policy number</label><input id="f-ref" type="text" placeholder="optional"></div>
+            </div>
+            <button class="btn primary small" type="submit" style="margin-top:6px;">Save to vault</button>
+            <button class="btn ghost small" type="button" onclick="cancelUpload()" style="margin-top:6px;margin-left:8px;">Cancel</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <h3>Your documents (<span id="vault-count">0</span>)</h3>
+          <div class="doc-grid" id="vault-grid"></div>
+        </div>
+      </section>
+
+      <!-- REMINDERS -->
+      <section class="view" id="view-reminders">
+        <div class="page-head">
+          <div>
+            <h2>Reminders</h2>
+            <p>Every tracked date, sorted by urgency. Mark items complete as you handle them.</p>
+          </div>
+        </div>
+        <div class="panel">
+          <div id="reminders-list"></div>
+        </div>
+      </section>
+
+      <!-- SEARCH -->
+      <section class="view" id="view-search">
+        <div class="page-head">
+          <div>
+            <h2>Search & Timeline</h2>
+            <p>Try "vehicle", "insurance", or a category name.</p>
+          </div>
+        </div>
+        <input type="text" class="search-input" id="search-box" placeholder="Show all my vehicle-related documents…" oninput="renderSearch()">
+        <div class="search-chips" id="search-chips"></div>
+        <div class="panel" style="margin-top:18px;">
+          <div id="search-results"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- storage helpers ---------------- */
+const USERS_KEY = 'lw_users';
+const SESSION_KEY = 'lw_session';
+const docsKeyFor = email => 'lw_docs_' + email;
+
+function getUsers(){ return JSON.parse(localStorage.getItem(USERS_KEY) || '{}'); }
+function saveUsers(u){ localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+function getDocs(){
+  const email = getSession();
+  return JSON.parse(localStorage.getItem(docsKeyFor(email)) || '[]');
+}
+function saveDocs(docs){
+  const email = getSession();
+  localStorage.setItem(docsKeyFor(email), JSON.stringify(docs));
+}
+function getSession(){ return localStorage.getItem(SESSION_KEY); }
+function setSession(email){ localStorage.setItem(SESSION_KEY, email); }
+function clearSession(){ localStorage.removeItem(SESSION_KEY); }
+
+/* ---------------- auth ---------------- */
+let authMode = 'login';
+function setAuthMode(mode){
+  authMode = mode;
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.toggle('active', t.dataset.mode===mode));
+  document.getElementById('reg-name-field').style.display = mode==='register' ? 'block':'none';
+  document.getElementById('auth-submit').textContent = mode==='register' ? 'Create account' : 'Log in';
+  document.getElementById('auth-error').style.display='none';
+}
+
+function submitAuth(){
+  const email = document.getElementById('auth-email').value.trim().toLowerCase();
+  const pw = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+  errEl.style.display='none';
+
+  if(!email || !pw){ errEl.textContent='Enter an email and password.'; errEl.style.display='block'; return; }
+
+  const users = getUsers();
+
+  if(authMode === 'register'){
+    const name = document.getElementById('reg-name').value.trim() || email.split('@')[0];
+    if(users[email]){ errEl.textContent='An account with that email already exists — log in instead.'; errEl.style.display='block'; return; }
+    users[email] = { name, pw };
+    saveUsers(users);
+    setSession(email);
+    enterApp();
+  } else {
+    if(!users[email] || users[email].pw !== pw){
+      errEl.textContent='No matching account. Check your details or register.';
+      errEl.style.display='block';
+      return;
+    }
+    setSession(email);
+    enterApp();
+  }
+}
+
+function logout(){
+  clearSession();
+  document.getElementById('app').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+  document.getElementById('auth-password').value='';
+}
+
+function enterApp(){
+  const email = getSession();
+  const users = getUsers();
+  const name = (users[email] && users[email].name) || email.split('@')[0];
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('side-user-name').textContent = name;
+  document.getElementById('side-user-email').textContent = email;
+  document.getElementById('dash-greeting').textContent = 'Welcome back, ' + name.split(' ')[0];
+  seedIfEmpty();
+  renderAll();
+}
+
+/* ---------------- seed demo data on first login ---------------- */
+function seedIfEmpty(){
+  const docs = getDocs();
+  if(docs.length) return;
+  const today = new Date();
+  const iso = d => d.toISOString().slice(0,10);
+  const addDays = n => { const d = new Date(today); d.setDate(d.getDate()+n); return iso(d); };
+  const seeded = [
+    { id: cryptoId(), name:'Vehicle Insurance — XYZ', category:'Vehicle', date: addDays(5), ref:'POL-88213', done:false },
+    { id: cryptoId(), name:'Broadband Subscription', category:'Household', date: addDays(18), ref:'', done:false },
+    { id: cryptoId(), name:'Laptop Warranty', category:'Purchases', date: addDays(-4), ref:'WR-4471', done:true },
+  ];
+  saveDocs(seeded);
+}
+function cryptoId(){ return 'd_' + Math.random().toString(36).slice(2,10); }
+
+/* ---------------- categories / icons ---------------- */
+const CAT_ICON = { Documents:'📄', Vehicle:'🚗', Finance:'💳', Household:'🏠', Education:'🎓', Purchases:'🛒' };
+
+/* ---------------- status logic ---------------- */
+function statusOf(doc){
+  if(doc.done) return 'done';
+  const days = Math.ceil((new Date(doc.date) - new Date(new Date().toDateString())) / 86400000);
+  if(days <= 7) return 'expiring';
+  if(days <= 30) return 'due';
+  return 'ok';
+}
+function statusLabel(s){
+  return { expiring:'Expiring soon', due:'Due this month', ok:'Tracked', done:'Completed' }[s];
+}
+function daysLabel(doc){
+  const days = Math.ceil((new Date(doc.date) - new Date(new Date().toDateString())) / 86400000);
+  if(doc.done) return 'Marked complete';
+  if(days < 0) return Math.abs(days)+' day(s) overdue';
+  if(days === 0) return 'Due today';
+  return 'in ' + days + ' day(s)';
+}
+
+/* ---------------- navigation ---------------- */
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===name));
+  if(name==='search') renderSearch();
+}
+
+/* ---------------- render: dashboard ---------------- */
+function renderDashboard(){
+  const docs = getDocs();
+  const counts = { expiring:0, due:0, done:0 };
+  docs.forEach(d=>{ const s=statusOf(d); if(s==='expiring')counts.expiring++; else if(s==='due')counts.due++; else if(s==='done')counts.done++; });
+  document.getElementById('stat-expiring').textContent = counts.expiring;
+  document.getElementById('stat-due').textContent = counts.due;
+  document.getElementById('stat-completed').textContent = counts.done;
+  document.getElementById('stat-total').textContent = docs.length;
+
+  const upcoming = docs.filter(d=>!d.done).sort((a,b)=> new Date(a.date)-new Date(b.date)).slice(0,6);
+  const el = document.getElementById('dash-upcoming');
+  if(!upcoming.length){
+    el.innerHTML = emptyState('📭','Nothing tracked yet','Upload your first document from the Vault to see it here.');
+    return;
+  }
+  el.innerHTML = upcoming.map(d => eventRowHTML(d)).join('');
+}
+
+function eventRowHTML(d){
+  const s = statusOf(d);
+  return `<div class="event-row">
+    <div class="cat-ic">${CAT_ICON[d.category]||'📄'}</div>
+    <div class="info"><div class="n">${escapeHtml(d.name)}</div><div class="m">${d.category} · ${daysLabel(d)}</div></div>
+    <span class="badge ${s}">${statusLabel(s)}</span>
+  </div>`;
+}
+
+function emptyState(em,title,sub){
+  return `<div class="empty-state"><span class="em">${em}</span><b>${title}</b><div style="margin-top:4px;">${sub}</div></div>`;
+}
+
+/* ---------------- render: reminders ---------------- */
+function renderReminders(){
+  const docs = getDocs().slice().sort((a,b)=> new Date(a.date)-new Date(b.date));
+  const el = document.getElementById('reminders-list');
+  if(!docs.length){ el.innerHTML = emptyState('⏰','No reminders yet','Documents with a key date will appear here automatically.'); return; }
+  el.innerHTML = docs.map(d=>{
+    const s = statusOf(d);
+    return `<div class="event-row">
+      <div class="cat-ic">${CAT_ICON[d.category]||'📄'}</div>
+      <div class="info"><div class="n">${escapeHtml(d.name)}</div><div class="m">${d.category} · ${d.date} · ${daysLabel(d)}</div></div>
+      <span class="badge ${s}">${statusLabel(s)}</span>
+      <span class="complete-toggle" onclick="toggleDone('${d.id}')">${d.done?'Undo':'Mark done'}</span>
+    </div>`;
+  }).join('');
+}
+function toggleDone(id){
+  const docs = getDocs();
+  const d = docs.find(x=>x.id===id);
+  if(d){ d.done = !d.done; saveDocs(docs); renderAll(); showToast(d.done? 'Marked as completed' : 'Reopened'); }
+}
+
+/* ---------------- render: vault ---------------- */
+function renderVault(){
+  const docs = getDocs();
+  document.getElementById('vault-count').textContent = docs.length;
+  const el = document.getElementById('vault-grid');
+  if(!docs.length){ el.innerHTML = ''; return; }
+  el.innerHTML = docs.slice().sort((a,b)=> new Date(a.date)-new Date(b.date)).map(d=>{
+    const s = statusOf(d);
+    return `<div class="doc-card">
+      <div class="top"><span class="cat">${CAT_ICON[d.category]||'📄'}</span><span class="del" onclick="deleteDoc('${d.id}')">Remove</span></div>
+      <h4>${escapeHtml(d.name)}</h4>
+      <div class="meta">${d.category}${d.ref? ' · '+escapeHtml(d.ref):''}</div>
+      <div class="meta">Key date: ${d.date}</div>
+      <span class="badge ${s}">${statusLabel(s)}</span>
+      <span class="complete-toggle" onclick="toggleDone('${d.id}')">${d.done?'Undo':'Mark done'}</span>
+    </div>`;
+  }).join('');
+}
+function deleteDoc(id){
+  let docs = getDocs();
+  docs = docs.filter(d=>d.id!==id);
+  saveDocs(docs);
+  renderAll();
+  showToast('Document removed');
+}
+
+/* ---------------- render: search ---------------- */
+let activeCatFilter = 'All';
+function renderSearchChips(){
+  const cats = ['All','Documents','Vehicle','Finance','Household','Education','Purchases'];
+  document.getElementById('search-chips').innerHTML = cats.map(c=>
+    `<span class="chip-btn ${c===activeCatFilter?'active':''}" onclick="setCatFilter('${c}')">${c}</span>`
+  ).join('');
+}
+function setCatFilter(c){ activeCatFilter = c; renderSearchChips(); renderSearch(); }
+function renderSearch(){
+  renderSearchChips();
+  const q = (document.getElementById('search-box').value || '').toLowerCase();
+  const docs = getDocs().filter(d=>{
+    const matchesCat = activeCatFilter==='All' || d.category===activeCatFilter;
+    const matchesQ = !q || d.name.toLowerCase().includes(q) || d.category.toLowerCase().includes(q) || (d.ref||'').toLowerCase().includes(q);
+    return matchesCat && matchesQ;
+  }).sort((a,b)=> new Date(a.date)-new Date(b.date));
+  const el = document.getElementById('search-results');
+  if(!docs.length){ el.innerHTML = emptyState('🔍','No matches','Try a different keyword or category.'); return; }
+  el.innerHTML = docs.map(d=>eventRowHTML(d)).join('');
+}
+
+/* ---------------- upload / AI extraction simulation ---------------- */
+let pendingFileName = '';
+function handleFile(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  pendingFileName = file.name;
+  document.getElementById('extract-form').style.display='none';
+  const analyzing = document.getElementById('analyzing');
+  const steps = ['Reading document with AI/OCR…','Identifying document type…','Extracting key fields…'];
+  let i=0;
+  analyzing.style.display='flex';
+  document.getElementById('analyzing-text').textContent = steps[0];
+  const iv = setInterval(()=>{
+    i++;
+    if(i < steps.length){ document.getElementById('analyzing-text').textContent = steps[i]; }
+    else {
+      clearInterval(iv);
+      analyzing.style.display='none';
+      prefillFromFilename(pendingFileName);
+      document.getElementById('extract-form').style.display='block';
+    }
+  }, 550);
+}
+
+function prefillFromFilename(filename){
+  const lower = filename.toLowerCase();
+  let category = 'Documents', name = filename.replace(/\.[^/.]+$/, '').replace(/[_-]/g,' ');
+  let daysAhead = 30, ref = '';
+
+  if(lower.includes('insur')){ category='Vehicle'; daysAhead=30; ref='POL-'+Math.floor(10000+Math.random()*89999); if(!/insurance/i.test(name)) name = 'Vehicle Insurance'; }
+  else if(lower.includes('vehic') || lower.includes('car')){ category='Vehicle'; daysAhead=45; }
+  else if(lower.includes('warrant')){ category='Purchases'; daysAhead=180; ref='WR-'+Math.floor(1000+Math.random()*8999); }
+  else if(lower.includes('bill') || lower.includes('invoice') || lower.includes('receipt')){ category='Finance'; daysAhead=14; }
+  else if(lower.includes('rent') || lower.includes('lease') || lower.includes('home')){ category='Household'; daysAhead=60; }
+  else if(lower.includes('cert') || lower.includes('degree') || lower.includes('marksheet')){ category='Education'; daysAhead=365; }
+  else if(lower.includes('subscri')){ category='Household'; daysAhead=20; }
+
+  const d = new Date(); d.setDate(d.getDate()+daysAhead);
+  document.getElementById('f-name').value = titleCase(name) || 'Untitled document';
+  document.getElementById('f-category').value = category;
+  document.getElementById('f-date').value = d.toISOString().slice(0,10);
+  document.getElementById('f-ref').value = ref;
+}
+function titleCase(s){ return s.replace(/\w\S*/g, t => t.charAt(0).toUpperCase()+t.slice(1)); }
+
+function saveDocument(e){
+  e.preventDefault();
+  const docs = getDocs();
+  docs.push({
+    id: cryptoId(),
+    name: document.getElementById('f-name').value.trim() || 'Untitled document',
+    category: document.getElementById('f-category').value,
+    date: document.getElementById('f-date').value,
+    ref: document.getElementById('f-ref').value.trim(),
+    done:false
+  });
+  saveDocs(docs);
+  cancelUpload();
+  renderAll();
+  showToast('Document saved — reminder scheduled');
+  return false;
+}
+function cancelUpload(){
+  document.getElementById('extract-form').style.display='none';
+  document.getElementById('file-input').value='';
+}
+
+/* drag and drop */
+const zone = document.getElementById('upload-zone');
+['dragenter','dragover'].forEach(evt => zone.addEventListener(evt, e=>{ e.preventDefault(); zone.classList.add('drag'); }));
+['dragleave','drop'].forEach(evt => zone.addEventListener(evt, e=>{ e.preventDefault(); zone.classList.remove('drag'); }));
+zone.addEventListener('drop', e=>{
+  if(e.dataTransfer.files.length){
+    document.getElementById('file-input').files = e.dataTransfer.files;
+    handleFile({target:{files:e.dataTransfer.files}});
+  }
+});
+
+/* ---------------- misc ---------------- */
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display='flex';
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>{ t.style.display='none'; }, 2400);
+}
+function renderAll(){
+  renderDashboard();
+  renderVault();
+  renderReminders();
+  if(document.getElementById('view-search').classList.contains('active')) renderSearch();
+}
+
+/* ---------------- boot ---------------- */
+(function boot(){
+  const session = getSession();
+  if(session && getUsers()[session]){ enterApp(); }
+})();
+</script>
+</body>
+</html>
